@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading;
 
-namespace Yak.Generator;
+namespace Yak;
 
 [Generator]
 public class YakGenerator : IIncrementalGenerator
@@ -178,7 +178,7 @@ public class YakGenerator : IIncrementalGenerator
                     INamedTypeSymbol attributeContainingTypeSymbol = symbol.ContainingType;
                     string fullName = attributeContainingTypeSymbol.ToDisplayString();
 
-                    if (fullName.StartsWith("Yak.Lifetime."))
+                    if (fullName.StartsWith("Yak.Attributes.Lifetime."))
                     {
                         scope = DetermineRegistrationScope(fullName);
                     }
@@ -214,9 +214,9 @@ public class YakGenerator : IIncrementalGenerator
     {
         switch (name)
         {
-            case "Yak.Lifetime.SingletonAttribute":
+            case "Yak.Attributes.Lifetime.SingletonAttribute":
                 return RegistrationScope.Singleton;
-            case "Yak.Lifetime.ScopedAttribute":
+            case "Yak.Attributes.Lifetime.ScopedAttribute":
                 return RegistrationScope.Scoped;
             default:
                 return RegistrationScope.Transient;

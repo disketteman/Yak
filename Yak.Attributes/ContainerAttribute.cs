@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Yak;
+namespace Yak.Attributes;
 
 public class ContainerAttribute : Attribute
 {

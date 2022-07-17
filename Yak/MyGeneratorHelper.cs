@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Yak.Generator;
+namespace Yak;
 
 internal static class MyGeneratorHelper
 {
