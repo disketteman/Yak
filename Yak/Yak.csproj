@@ -13,11 +13,7 @@
     <Description>Compile-time inversion of control container for C#.</Description>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
   </PropertyGroup>
-  
-  <ItemGroup>
-    <ProjectReference Include="..\Yak.Generator\Yak.Generator.csproj" />
-  </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Yak.Generator\Yak.Generator.csproj" IncludeAssets="none" PrivateAssets="none" ExcludeAssets="all" />
   </ItemGroup>
