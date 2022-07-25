@@ -42,6 +42,9 @@ internal class ContainerInfoComparer: IEqualityComparer<ContainerInfo?>
         if (ReferenceEquals(x, null)) return false;
         if (ReferenceEquals(y, null)) return false;
         if (x.GetType() != y.GetType()) return false;
+        if (!x.Usings.Equals(y.Usings)) return false;
+        if (x.Namespace != y.Namespace) return false;
+        if (x.Name != y.Name) return false;
 
         foreach ((Registration regX, Registration regY) in x.Registrations.Zip(y.Registrations,
                      (regX, regY) => (regX, regY)))
@@ -51,8 +54,8 @@ internal class ContainerInfoComparer: IEqualityComparer<ContainerInfo?>
                 return false;
             }
         }
-        
-        return x.Usings.Equals(y.Usings) && x.Namespace == y.Namespace && x.Name == y.Name && x.Registrations.Equals(y.Registrations);
+
+        return true;
     }
 
     public int GetHashCode(ContainerInfo? obj)
