@@ -12,81 +12,42 @@ namespace Yak.Generator;
 [Generator]
 public class YakGenerator : IIncrementalGenerator
 {
+    private const string YakAttributesPrefix = "Yak.";
+    private const string YakSingletonAttribute = "Yak.SingletonAttribute";
+    private const string YakScopedAttribute = "Yak.ScopedAttribute";
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        /*
-        #if DEBUG
-                if (!Debugger.IsAttached)
-                {
-                    Debugger.Launch();
-                }
-        #endif
-        */
-        Debug.WriteLine("Initalize code generator");
+// This is the only meaningful way to debug Source Generators.
+// It's not by default, so it's not triggered for every debugging session.
+#if ATTACH_DEBUGGER
+        if (!Debugger.IsAttached)
+        {
+            Debugger.Launch();
+        }
+#endif
 
-        /*// Add the marker attribute
-        context.RegisterPostInitializationOutput(ctx => ctx.AddSource(
-            "EnumExtensionsAttribute.g.cs",
-            SourceText.From("//", Encoding.UTF8)));
-        */
-
-        // Do a simple filter for enums
-        IncrementalValuesProvider<ContainerInfo> enumDeclarations = context.SyntaxProvider
+        IncrementalValuesProvider<ContainerInfo> containers = context.SyntaxProvider
             .CreateSyntaxProvider(
-                predicate: IsSyntaxTarget, // select enums with attributes
-                transform: Transform) // sect the enum with the [EnumExtensions] attribute
-            .Where(static m => m is not null)!; // filter out attributed enums that we don't care about
+                predicate: IsInterfaceInheritingIContainer,
+                transform: Transform)
+            .Where(static m => m is not null)!;
 
-        // Combine the selected enums with the `Compilation`
-        IncrementalValueProvider<(Compilation, ImmutableArray<ContainerInfo>)> compilationAndEnums
-            = context.CompilationProvider.Combine(enumDeclarations.Collect());
-
-        // Generate the source using the compilation and enums
-        context.RegisterSourceOutput(compilationAndEnums,
-            (spc, source) => Execute(source.Item1, source.Item2, spc));
+        context.RegisterSourceOutput(containers, Execute);
     }
 
-    private static bool IsCandidate(SyntaxNode syntaxNode, CancellationToken cancellationToken)
+    private static bool IsInterfaceInheritingIContainer(SyntaxNode node, CancellationToken cancellationToken)
     {
-        if (syntaxNode is CompilationUnitSyntax compilationUnitSyntax)
+        if (node is InterfaceDeclarationSyntax interfaceDeclarationSyntax)
         {
-            foreach (var usingDirectiveSyntax in compilationUnitSyntax.Usings)
+            if (interfaceDeclarationSyntax.BaseList == null)
             {
-                //usingDirectiveSyntax.Using
+                return false;
             }
-        }
-        return false;
-    }
 
-    private static InterfaceDeclarationSyntax? FindModuleInterface(CompilationUnitSyntax node)
-    {
-        InterfaceDeclarationSyntax? interfaceDeclarationSyntax;
-        foreach (var child in node.ChildNodes())
-        {
-            if ((interfaceDeclarationSyntax = child as InterfaceDeclarationSyntax) != null)
+            foreach (var type in interfaceDeclarationSyntax.BaseList.Types)
             {
-                if (IsModuleInterface(interfaceDeclarationSyntax))
-                {
-                    return interfaceDeclarationSyntax;
-                }
-            }
-            else if ((interfaceDeclarationSyntax = FindModuleInterface(node)) != null)
-            {
-                return interfaceDeclarationSyntax;
-            }
-        }
-        return null;
-    }
-
-    private static bool IsModuleInterface(InterfaceDeclarationSyntax interfaceDeclarationSyntax)
-    {
-        foreach (var attributeList in interfaceDeclarationSyntax.AttributeLists)
-        {
-            foreach (var attribute in attributeList.Attributes)
-            {
-                (string name, int arity) = GetIdentifier(attribute.Name);
-
-                if (name == "Container")
+                if (type.ToString() == "IContainer")
                 {
                     return true;
                 }
@@ -94,47 +55,13 @@ public class YakGenerator : IIncrementalGenerator
         }
         return false;
     }
-
-    private static bool IsSyntaxTarget(SyntaxNode node, CancellationToken cancellationToken)
+    
+    private static ContainerInfo? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
     {
-        if (node is InterfaceDeclarationSyntax interfaceDeclarationSyntax)
-        {
-
-            foreach (var attributeList in interfaceDeclarationSyntax.AttributeLists)
-            {
-                foreach (var attribute in attributeList.Attributes)
-                {
-                    (string name, int arity) = GetIdentifier(attribute.Name);
-
-                    if (name == "Container")
-                    {
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    private static T? FindFirstParent<T>(SyntaxNode node) where T : SyntaxNode
-    {
-        SyntaxNode? evaluated = node.Parent;
-        while (evaluated != null)
-        {
-            if (evaluated is T instance)
-            {
-                return instance;
-            }
-            evaluated = evaluated.Parent;
-        }
-        return null;
-    }
-
-    static ContainerInfo? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
-    {
+        // it's pretty safe to assume it's InterfaceDeclarationSyntax, because only that type is prefiltered by IsInterfaceInheritingIContainer
         InterfaceDeclarationSyntax interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)context.Node;
 
-        CompilationUnitSyntax? compilationUnitSyntax = FindFirstParent<CompilationUnitSyntax>(context.Node);
+        CompilationUnitSyntax? compilationUnitSyntax = context.Node.FindFirstParent<CompilationUnitSyntax>();
 
         // TODO: Is it even possible to not have any parent compilation unit?
         if (compilationUnitSyntax == null)
@@ -142,10 +69,7 @@ public class YakGenerator : IIncrementalGenerator
             return null;
         }
 
-        ContainerInfo containerInfo = new();
-        // this doesn't work
-        //TypeInfo interfaceType = context.SemanticModel.GetTypeInfo(interfaceDeclarationSyntax);
-
+        // TODO: SemanticModel is needed only for ContainingNamespace, perhaps we can easily figure that out via SyntaxNode?
         var interfaceDeclaredSymbol = context.SemanticModel.GetDeclaredSymbol(interfaceDeclarationSyntax);
 
         if (interfaceDeclaredSymbol == null)
@@ -153,35 +77,33 @@ public class YakGenerator : IIncrementalGenerator
             return null;
         }
 
-        //var containingModule = interfaceDeclaredSymbol.;
-        //var x = containingModule.Usin
-
-        containerInfo.Name = interfaceDeclarationSyntax.Identifier;
-        containerInfo.Namespace = interfaceDeclaredSymbol.ContainingNamespace;
-        containerInfo.Usings = compilationUnitSyntax.Usings;
+        ContainerInfo containerInfo = new ContainerInfo(
+            compilationUnitSyntax.Usings,
+            interfaceDeclaredSymbol.ContainingNamespace.ToDisplayString(),
+            interfaceDeclarationSyntax.Identifier.ToString()
+        );
 
         foreach (MemberDeclarationSyntax member in interfaceDeclarationSyntax.Members)
         {
+            cancellationToken.ThrowIfCancellationRequested();
 
             RegistrationScope? scope = null;
-            foreach (AttributeListSyntax attributeListSyntax in member.AttributeLists)
+            foreach (AttributeSyntax attributeSyntax in member.AllAttributes())
             {
-                foreach (AttributeSyntax attributeSyntax in attributeListSyntax.Attributes)
+                // TODO: Perhaps the semantic model could be ignored and scope could be figured out just from the name
+                var symbol = context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol;
+
+                if (symbol == null)
                 {
-                    var symbol = context.SemanticModel.GetSymbolInfo(attributeSyntax).Symbol;
+                    continue;
+                }
 
-                    if (symbol == null)
-                    {
-                        continue;
-                    }
+                INamedTypeSymbol attributeContainingTypeSymbol = symbol.ContainingType;
+                string fullName = attributeContainingTypeSymbol.ToDisplayString();
 
-                    INamedTypeSymbol attributeContainingTypeSymbol = symbol.ContainingType;
-                    string fullName = attributeContainingTypeSymbol.ToDisplayString();
-
-                    if (fullName.StartsWith("Yak.Lifetime."))
-                    {
-                        scope = DetermineRegistrationScope(fullName);
-                    }
+                if (fullName.StartsWith(YakAttributesPrefix))
+                {
+                    scope = DetermineRegistrationScope(fullName);
                 }
             }
 
@@ -191,19 +113,20 @@ public class YakGenerator : IIncrementalGenerator
             }
 
             PropertyDeclarationSyntax propertyDeclarationSyntax = (PropertyDeclarationSyntax)member;
-            //propertyDeclarationSyntax.ExpressionBody.Expression.
             string name = propertyDeclarationSyntax.Identifier.ValueText;
 
             IdentifierNameSyntax identifierNameSyntax = (IdentifierNameSyntax)propertyDeclarationSyntax.Type;
+
+            // TODO: report an error on missing ExpressionBody 
+            if (propertyDeclarationSyntax.ExpressionBody == null)
+            {
+                continue;
+            }
+
+            string stringifiedExpression = propertyDeclarationSyntax.ExpressionBody.ToFullString();
             string type = identifierNameSyntax.Identifier.ValueText;
 
-            Registration registration = new Registration
-            {
-                RegistrationScope = scope.Value,
-                Type = type,
-                Name = name,
-                PropertyDeclarationSyntax = propertyDeclarationSyntax
-            };
+            Registration registration = new Registration(type, name, scope.Value, stringifiedExpression);
             containerInfo.Registrations.Add(registration);
         }
 
@@ -214,36 +137,18 @@ public class YakGenerator : IIncrementalGenerator
     {
         switch (name)
         {
-            case "Yak.Lifetime.SingletonAttribute":
+            case YakSingletonAttribute:
                 return RegistrationScope.Singleton;
-            case "Yak.Lifetime.ScopedAttribute":
+            case YakScopedAttribute:
                 return RegistrationScope.Scoped;
             default:
                 return RegistrationScope.Transient;
         }
     }
 
-    void Execute(Compilation compilation, ImmutableArray<ContainerInfo> containerInfos, SourceProductionContext context)
+    void Execute(SourceProductionContext context, ContainerInfo containerInfo)
     {
-        foreach (var containerInfo in containerInfos)
-        {
-            (string filename, string content) = MyGeneratorHelper.GenerateContainerClass(containerInfo);
-            context.AddSource(filename, SourceText.From(content, Encoding.UTF8));
-        }
-
-    }
-
-    // copied from StrongInject
-    private static (string identifier, int arity) GetIdentifier(NameSyntax name)
-    {
-        var simpleName = name switch
-        {
-            SimpleNameSyntax s => s,
-            AliasQualifiedNameSyntax { Name: var s } => s,
-            QualifiedNameSyntax { Right: var s } => s,
-            var other => throw new NotImplementedException(other.GetType().ToString())
-        };
-
-        return (simpleName.Identifier.Text, simpleName.Arity);
+        (string filename, string content) = MyGeneratorHelper.GenerateContainerClass(containerInfo);
+        context.AddSource(filename, SourceText.From(content, Encoding.UTF8));
     }
 }
