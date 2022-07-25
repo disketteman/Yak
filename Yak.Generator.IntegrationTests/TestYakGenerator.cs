@@ -34,41 +34,40 @@ public class C
     }
 }
 
-[Container]
-public interface IMyModule
+public interface IMyContainer : IContainer
 {
-    [Lifetime.Singleton]
+    [Singleton]
     IA A => new A();
 
-    [Lifetime.Transient]
+    [Transient]
     B B => new B(A);
 
-    [Lifetime.Scoped]
+    [Scoped]
     C C => new C(A, B);
 }
 
-public partial class MyModule: IMyModule
+public partial class MyContainer: IMyContainer
 {
 
 }
 
 public class TestYakGenerator
 {
-    private IMyModule _module;
+    private IMyContainer _container;
 
     [SetUp]
     public void Setup()
     {
-        _module = new MyModule();
+        _container = new MyContainer();
     }
 
     [Test]
     public void TestSingletonIsCreatedProperly()
     {
-        IA a1 = _module.A;
+        IA a1 = _container.A;
         Assert.IsNotNull(a1);
 
-        IA a2 = _module.A;
+        IA a2 = _container.A;
         Assert.IsNotNull(a2);
 
         Assert.True(object.ReferenceEquals(a1, a2));
@@ -77,10 +76,10 @@ public class TestYakGenerator
     [Test]
     public void TestTransientIsCreatedProperly()
     {
-        B b1 = _module.B;
+        B b1 = _container.B;
         Assert.IsNotNull(b1);
 
-        B b2 = _module.B;
+        B b2 = _container.B;
         Assert.IsNotNull(b2);
 
         Assert.False(object.ReferenceEquals(b1, b2));
@@ -90,10 +89,10 @@ public class TestYakGenerator
     [Test]
     public void TestScopedIsCreatedProperly()
     {
-        C c1 = _module.C;
+        C c1 = _container.C;
         Assert.IsNotNull(c1);
 
-        C c2 = _module.C;
+        C c2 = _container.C;
         Assert.IsNotNull(c2);
 
         Assert.True(object.ReferenceEquals(c1, c2));

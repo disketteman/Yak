@@ -12,9 +12,10 @@ internal static class MyGeneratorHelper
         StringBuilder stringBuilder = new StringBuilder();
         StringWriter stringWriter = new StringWriter(stringBuilder);
 
-        string interfaceName = containerInfo.Name.ValueText;
-        string name = containerInfo.Name.ValueText.Substring(1);
-        string containingNamespace = containerInfo.Namespace?.ToDisplayString() ?? "";
+        string interfaceName = containerInfo.Name;
+        string name = containerInfo.Name.Substring(1);
+        // TODO: what about global namespace?
+        string containingNamespace = containerInfo.Namespace ?? "";
 
         foreach (var usingDirective in containerInfo.Usings)
         {
@@ -47,7 +48,7 @@ public partial class {name} : {interfaceName}
     private static string CreateMember(ContainerInfo containerInfo, Registration registration, StringWriter writer)
     {
         string privateInstanceName = $"_{char.ToLowerInvariant(registration.Name[0])}{registration.Name.Substring(1)}";
-        string expression = registration.PropertyDeclarationSyntax.ExpressionBody.ToFullString();
+        string expression = registration.StringifiedExpression;
 
         if (registration.RegistrationScope == RegistrationScope.Singleton)
         {
@@ -55,7 +56,7 @@ public partial class {name} : {interfaceName}
 $@"
     // singleton
     private {registration.Type} Provide{registration.Name}() {expression};
-    private {registration.Type} {privateInstanceName};
+    private {registration.Type}? {privateInstanceName};
     public {registration.Type} {registration.Name} {{
         get
         {{
@@ -79,7 +80,7 @@ $@"
 $@"
     // scoped
     private {registration.Type} Provide{registration.Name}() {expression};
-    private {registration.Type} {privateInstanceName};
+    private {registration.Type}? {privateInstanceName};
     public {registration.Type} {registration.Name} {{
         get
         {{
