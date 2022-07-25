@@ -56,7 +56,7 @@ public class YakGenerator : IIncrementalGenerator
         return false;
     }
     
-    static ContainerInfo? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+    private static ContainerInfo? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
     {
         // it's pretty safe to assume it's InterfaceDeclarationSyntax, because only that type is prefiltered by IsInterfaceInheritingIContainer
         InterfaceDeclarationSyntax interfaceDeclarationSyntax = (InterfaceDeclarationSyntax)context.Node;
