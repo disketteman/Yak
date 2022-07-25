@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Yak.Generator;
 
-internal static class MyGeneratorHelper
+internal static class YakGeneratorHelper
 {
     public static (string, string) GenerateContainerClass(ContainerInfo containerInfo)
     {

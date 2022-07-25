@@ -31,6 +31,7 @@ public class YakGenerator : IIncrementalGenerator
             .CreateSyntaxProvider(
                 predicate: IsInterfaceInheritingIContainer,
                 transform: Transform)
+            .WithComparer(new ContainerInfoComparer( new RegistrationComparer()))
             .Where(static m => m is not null)!;
 
         context.RegisterSourceOutput(containers, Execute);
@@ -148,7 +149,7 @@ public class YakGenerator : IIncrementalGenerator
 
     void Execute(SourceProductionContext context, ContainerInfo containerInfo)
     {
-        (string filename, string content) = MyGeneratorHelper.GenerateContainerClass(containerInfo);
+        (string filename, string content) = YakGeneratorHelper.GenerateContainerClass(containerInfo);
         context.AddSource(filename, SourceText.From(content, Encoding.UTF8));
     }
 }
