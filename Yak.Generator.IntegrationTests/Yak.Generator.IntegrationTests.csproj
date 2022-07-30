@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Yak.Generator.IntegrationTests.Dependency\Yak.Generator.IntegrationTests.Dependency.csproj" />
     <ProjectReference Include="..\Yak.Generator\Yak.Generator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\Yak\Yak.csproj" />
   </ItemGroup>

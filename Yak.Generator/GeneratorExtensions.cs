@@ -31,5 +31,23 @@ public static class GeneratorExtensions
             }
         }
     }
+    
+    public static T? FirstDescendant<T>(this SyntaxNode? node) where T : SyntaxNode
+    {
+        if (node == null)
+        {
+            return null;
+        }
+
+        foreach (var descendant in node.DescendantNodes())
+        {
+            if (descendant is T evaluated)
+            {
+                return evaluated;
+            }
+        }
+
+        return null;
+    }
 }
 

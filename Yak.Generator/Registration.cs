@@ -8,14 +8,14 @@ internal sealed class Registration
     public string Type { get; }
     public string Name { get; }
     public RegistrationScope RegistrationScope { get; }
-    public string StringifiedExpression { get; }
+    public ConstructorInfo? ConstructorInfo { get; }
 
-    public Registration(string type, string name, RegistrationScope registrationScope, string stringifiedExpression)
+    public Registration(string type, string name, RegistrationScope registrationScope, ConstructorInfo? constructorInfo)
     {
         Type = type ?? throw new ArgumentNullException(nameof(type));
         Name = name ?? throw new ArgumentNullException(nameof(name));
         RegistrationScope = registrationScope;
-        StringifiedExpression = stringifiedExpression ?? throw new ArgumentNullException(nameof(stringifiedExpression));
+        ConstructorInfo = constructorInfo;
     }
 }
 
@@ -27,7 +27,7 @@ internal class RegistrationComparer : IEqualityComparer<Registration>
         if (ReferenceEquals(x, null)) return false;
         if (ReferenceEquals(y, null)) return false;
 
-        return x.Type == y.Type && x.Name == y.Name && x.RegistrationScope == y.RegistrationScope && x.StringifiedExpression == y.StringifiedExpression;
+        return x.Type == y.Type && x.Name == y.Name && x.RegistrationScope == y.RegistrationScope;
     }
 
     public int GetHashCode(Registration obj)
@@ -37,7 +37,6 @@ internal class RegistrationComparer : IEqualityComparer<Registration>
             var hashCode = obj.Type.GetHashCode();
             hashCode = (hashCode * 397) ^ obj.Name.GetHashCode();
             hashCode = (hashCode * 397) ^ (int)obj.RegistrationScope;
-            hashCode = (hashCode * 397) ^ obj.StringifiedExpression.GetHashCode();
             return hashCode;
         }
     }

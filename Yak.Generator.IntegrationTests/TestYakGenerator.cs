@@ -1,26 +1,8 @@
 using NUnit.Framework;
 using Yak;
+using Yak.Generator.IntegrationTests.Dependency;
 
 namespace Yak.Generator.IntegrationTests;
-
-public interface IA
-{
-
-}
-
-public class A : IA
-{
-
-}
-
-public class B
-{
-    public IA A { get; }
-    public B(IA a)
-    {
-        A = a;
-    }
-}
 
 public class C
 {
@@ -34,26 +16,26 @@ public class C
     }
 }
 
-public interface IMyContainer : IContainer
+public abstract class MyContainerBase : ContainerBase
 {
     [Singleton]
-    IA A => new A();
+    public virtual IA A => Construct<A>();
 
     [Transient]
-    B B => new B(A);
+    public virtual B B => Construct<B>();
 
     [Scoped]
-    C C => new C(A, B);
+    public virtual C C => Construct<C>();
 }
 
-public partial class MyContainer: IMyContainer
+public partial class MyContainer: MyContainerBase
 {
 
 }
 
 public class TestYakGenerator
 {
-    private IMyContainer _container;
+    private MyContainerBase _container;
 
     [SetUp]
     public void Setup()
