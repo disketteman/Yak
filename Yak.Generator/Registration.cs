@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Yak.Generator;
+﻿namespace Yak.Generator;
 
 internal sealed class Registration
 {
@@ -17,26 +14,27 @@ internal sealed class Registration
         RegistrationScope = registrationScope;
         ConstructorInfo = constructorInfo;
     }
-}
 
-internal class RegistrationComparer : IEqualityComparer<Registration>
-{
-    public bool Equals(Registration x, Registration y)
+    public override bool Equals(object? obj)
     {
-        if (ReferenceEquals(x, y)) return true;
-        if (ReferenceEquals(x, null)) return false;
-        if (ReferenceEquals(y, null)) return false;
+        if (ReferenceEquals(this, obj)) return true;
 
-        return x.Type == y.Type && x.Name == y.Name && x.RegistrationScope == y.RegistrationScope;
+        return obj is Registration other &&
+// not really sure why the warning is raised, EqualityComparer<ConstructorInfo>.Default.Equals accepts nullables
+#pragma warning disable CS8604
+               EqualityComparer<ConstructorInfo>.Default.Equals(ConstructorInfo, other.ConstructorInfo) &&
+#pragma warning restore CS8604
+               Type == other.Type && Name == other.Name && RegistrationScope == other.RegistrationScope;
     }
 
-    public int GetHashCode(Registration obj)
+    public override int GetHashCode()
     {
         unchecked
         {
-            var hashCode = obj.Type.GetHashCode();
-            hashCode = (hashCode * 397) ^ obj.Name.GetHashCode();
-            hashCode = (hashCode * 397) ^ (int)obj.RegistrationScope;
+            var hashCode = Type.GetHashCode();
+            hashCode = (hashCode * 397) ^ Name.GetHashCode();
+            hashCode = (hashCode * 397) ^ (int)RegistrationScope;
+            hashCode = (hashCode * 397) ^ (ConstructorInfo != null ? ConstructorInfo.GetHashCode() : 0);
             return hashCode;
         }
     }

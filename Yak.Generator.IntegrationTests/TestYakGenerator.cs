@@ -19,13 +19,13 @@ public class C
 public abstract class MyContainerBase : ContainerBase
 {
     [Singleton]
-    public virtual IA A => Construct<A>();
+    public virtual IA A => Create<A>();
 
     [Transient]
-    public virtual B B => Construct<B>();
+    public virtual B B => Create<B>();
 
     [Scoped]
-    public virtual C C => Construct<C>();
+    public virtual C C => Create<C>();
 }
 
 public partial class MyContainer: MyContainerBase

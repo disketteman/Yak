@@ -1,13 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading;
 
 namespace Yak.Generator;
 
@@ -33,7 +27,6 @@ public class YakGenerator : IIncrementalGenerator
             .CreateSyntaxProvider(
                 predicate: IsInterfaceInheritingIContainer,
                 transform: Transform)
-            .WithComparer(new ContainerInfoComparer( new RegistrationComparer()))
             .Where(static m => m is not null)!;
 
         context.RegisterSourceOutput(containers, Execute);
@@ -62,16 +55,17 @@ public class YakGenerator : IIncrementalGenerator
     private static IdentifierNameSyntax? IdentifyConstructType(PropertyDeclarationSyntax propertyDeclarationSyntax)
     {
         GenericNameSyntax? invocationExpressionSyntax = propertyDeclarationSyntax
-            // => Construct<X>()
+            // => Create<X>()
             .FirstDescendant<ArrowExpressionClauseSyntax>()
-            // Construct<X>()
+            // Create<X>()
             .FirstDescendant<InvocationExpressionSyntax>()
-            // Construct<X>
+            // Create<X>
             .FirstDescendant<GenericNameSyntax>();
 
         string? genericFunctionCallName = invocationExpressionSyntax?.Identifier.ValueText;
 
-        if (genericFunctionCallName != "Construct")
+        // TODO: how to make sure it's really ContainerBase.Create?
+        if (genericFunctionCallName != "Create")
         {
             return null;
         }
@@ -96,22 +90,18 @@ public class YakGenerator : IIncrementalGenerator
         }
 
         TypeInfo typeInfo = semanticModel.GetTypeInfo(constructIdentifierNameSyntax);
-        INamedTypeSymbol? constructTypeSymbol = typeInfo.Type as INamedTypeSymbol;
+
+        if (typeInfo.Type is not INamedTypeSymbol constructTypeSymbol)
+        {
+            return null;
+        }
         string constructedTypeName = constructTypeSymbol.ToString();
 
-        IMethodSymbol? constructorSymbol = constructTypeSymbol?.Constructors[0];
+        IMethodSymbol constructorSymbol = constructTypeSymbol.Constructors[0];
 
-        if (constructorSymbol == null)
-        {
-
-        }
-
-        List<string> parameters = new();
-        foreach (var param in constructorSymbol.Parameters)
-        {
-            parameters.Add(param.Type.ToString());
-        }
-        return new ConstructorInfo { TypeName = constructedTypeName, ParameterTypes = parameters };
+        ImmutableArray<string> parameters = constructorSymbol.Parameters.Select(param => param.Type.ToString()).ToImmutableArray();
+        
+        return new ConstructorInfo(constructedTypeName, parameters);
     }
     
     private static ContainerInfo? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

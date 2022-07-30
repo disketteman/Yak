@@ -4,14 +4,15 @@
         <TargetFramework>netstandard2.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<LangVersion>10</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-      <DefineConstants>TRACE;ATTACH_DEBUGGER</DefineConstants>
+      <DefineConstants>TRACE;</DefineConstants>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-      <DefineConstants>TRACE;ATTACH_DEBUGGER</DefineConstants>
+      <DefineConstants>TRACE;</DefineConstants>
     </PropertyGroup>
 
 	<ItemGroup>

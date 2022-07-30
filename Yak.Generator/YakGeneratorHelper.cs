@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.Text;
 
 namespace Yak.Generator;
 
@@ -56,17 +53,29 @@ public partial class {name} : {baseName}
     private static string CreateMember(Registration registration, Dictionary<string, string> typeToPropertyNameLookup, StringWriter writer)
     {
         string privateInstanceName = $"_{char.ToLowerInvariant(registration.Name[0])}{registration.Name.Substring(1)}";
-
-        string construction = null;
-        ConstructorInfo constructorInfo = registration.ConstructorInfo;
+        
+        string construction;
+        ConstructorInfo? constructorInfo = registration.ConstructorInfo;
         if (constructorInfo != null)
         {
-            
             construction = $"new {constructorInfo.TypeName}(";
-            foreach (var param in constructorInfo.ParameterTypes)
+
+            int lastIndex = constructorInfo.ParameterTypes.Length - 1;
+            for (int index = 0; index < constructorInfo.ParameterTypes.Length; index++)
             {
-                construction = construction + typeToPropertyNameLookup[param];
+                var param = constructorInfo.ParameterTypes[index];
+                construction += typeToPropertyNameLookup[param];
+
+                if (index != lastIndex)
+                {
+                    construction += ", ";
+                }
             }
+            construction += ")";
+        }
+        else
+        {
+            construction = $"base.{registration.Name}";
         }
 
         if (registration.RegistrationScope == RegistrationScope.Singleton)
@@ -85,7 +94,7 @@ $@"
                 return root.{privateInstanceName};
             }}
 
-            root.{privateInstanceName} = base.{registration.Name};
+            root.{privateInstanceName} = {construction};
             return root.{privateInstanceName};
         }}
     }}
@@ -106,7 +115,7 @@ $@"
                 return {privateInstanceName};
             }}
 
-            {privateInstanceName} = base.{registration.Name};
+            {privateInstanceName} = {construction};
             return {privateInstanceName};
         }}
     }}
@@ -116,7 +125,7 @@ $@"
         return
 $@"
     // transient
-    public sealed override {registration.Type} {registration.Name} => base.{registration.Name};
+    public sealed override {registration.Type} {registration.Name} => {construction};
 ";
     }
 }

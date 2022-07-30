@@ -2,5 +2,5 @@
 
 public abstract class ContainerBase
 {
-    protected T Construct<T>() => throw new InvalidOperationException();
+    protected T Create<T>() => throw new InvalidOperationException();
 }
