@@ -13,14 +13,14 @@ internal sealed class ContainerInfo
     public SyntaxList<UsingDirectiveSyntax> Usings { get; }
     public string? Namespace { get; }
     public string Name { get; }
-    public List<Registration> Registrations { get; }
+    public List<PropertyInfo> Registrations { get; }
 
     public ContainerInfo(SyntaxList<UsingDirectiveSyntax> usings, string? @namespace, string name)
     {
         Usings = usings;
         Namespace = @namespace;
         Name = name ?? throw new ArgumentNullException(nameof(name));
-        Registrations = new List<Registration>();
+        Registrations = new List<PropertyInfo>();
     }
 
     public override bool Equals(object? obj)

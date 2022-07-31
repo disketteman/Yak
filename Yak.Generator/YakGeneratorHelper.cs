@@ -50,12 +50,12 @@ public partial class {name} : {baseName}
         return ($"{name}.Generated.cs", stringBuilder.ToString());
     }
 
-    private static string CreateMember(Registration registration, Dictionary<string, string> typeToPropertyNameLookup, StringWriter writer)
+    private static string CreateMember(PropertyInfo propertyInfo, Dictionary<string, string> typeToPropertyNameLookup, StringWriter writer)
     {
-        string privateInstanceName = $"_{char.ToLowerInvariant(registration.Name[0])}{registration.Name.Substring(1)}";
+        string privateInstanceName = $"_{char.ToLowerInvariant(propertyInfo.Name[0])}{propertyInfo.Name.Substring(1)}";
         
         StringBuilder construction = new();
-        ConstructorInfo? constructorInfo = registration.ConstructorInfo;
+        ConstructorInfo? constructorInfo = propertyInfo.ConstructorInfo;
         if (constructorInfo != null)
         {
             construction.Append("new ").Append(constructorInfo.TypeName).Append("(");
@@ -75,16 +75,16 @@ public partial class {name} : {baseName}
         }
         else
         {
-            construction.Append("base.").Append(registration.Name);
+            construction.Append("base.").Append(propertyInfo.Name);
         }
 
-        if (registration.RegistrationScope == RegistrationScope.Singleton)
+        if (propertyInfo.RegistrationScope == RegistrationScope.Singleton)
         {
             return
 $@"
     // singleton
-    private {registration.Type}? {privateInstanceName};
-    public sealed override {registration.Type} {registration.Name} {{
+    private {propertyInfo.Type}? {privateInstanceName};
+    public sealed override {propertyInfo.Type} {propertyInfo.Name} {{
         get
         {{
             var root = _root ?? this;
@@ -101,13 +101,13 @@ $@"
 ";
         }
 
-        if (registration.RegistrationScope == RegistrationScope.Scoped)
+        if (propertyInfo.RegistrationScope == RegistrationScope.Scoped)
         {
             return
 $@"
     // scoped
-    private {registration.Type}? {privateInstanceName};
-    public sealed override {registration.Type} {registration.Name} {{
+    private {propertyInfo.Type}? {privateInstanceName};
+    public sealed override {propertyInfo.Type} {propertyInfo.Name} {{
         get
         {{
             if ({privateInstanceName} != null)
@@ -125,7 +125,7 @@ $@"
         return
 $@"
     // transient
-    public sealed override {registration.Type} {registration.Name} => {construction};
+    public sealed override {propertyInfo.Type} {propertyInfo.Name} => {construction};
 ";
     }
 }

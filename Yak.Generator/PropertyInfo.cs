@@ -1,13 +1,13 @@
 ﻿namespace Yak.Generator;
 
-internal sealed class Registration
+internal sealed class PropertyInfo
 {
     public string Type { get; }
     public string Name { get; }
     public RegistrationScope RegistrationScope { get; }
     public ConstructorInfo? ConstructorInfo { get; }
 
-    public Registration(string type, string name, RegistrationScope registrationScope, ConstructorInfo? constructorInfo)
+    public PropertyInfo(string type, string name, RegistrationScope registrationScope, ConstructorInfo? constructorInfo)
     {
         Type = type ?? throw new ArgumentNullException(nameof(type));
         Name = name ?? throw new ArgumentNullException(nameof(name));
@@ -19,7 +19,7 @@ internal sealed class Registration
     {
         if (ReferenceEquals(this, obj)) return true;
 
-        return obj is Registration other &&
+        return obj is PropertyInfo other &&
 // not really sure why the warning is raised, EqualityComparer<ConstructorInfo>.Default.Equals accepts nullables
 #pragma warning disable CS8604
                EqualityComparer<ConstructorInfo>.Default.Equals(ConstructorInfo, other.ConstructorInfo) &&

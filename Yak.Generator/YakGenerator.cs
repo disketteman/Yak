@@ -178,8 +178,8 @@ public class YakGenerator : IIncrementalGenerator
             //IdentifierNameSyntax identifierNameSyntax = (IdentifierNameSyntax)propertyDeclarationSyntax.Type;
             //string type = identifierNameSyntax.Identifier.ValueText;
 
-            Registration registration = new Registration(type, name, scope.Value, constructorInfo);
-            containerInfo.Registrations.Add(registration);
+            PropertyInfo propertyInfo = new PropertyInfo(type, name, scope.Value, constructorInfo);
+            containerInfo.Registrations.Add(propertyInfo);
         }
 
         return containerInfo;
