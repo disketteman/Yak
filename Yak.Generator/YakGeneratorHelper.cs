@@ -54,28 +54,28 @@ public partial class {name} : {baseName}
     {
         string privateInstanceName = $"_{char.ToLowerInvariant(registration.Name[0])}{registration.Name.Substring(1)}";
         
-        string construction;
+        StringBuilder construction = new();
         ConstructorInfo? constructorInfo = registration.ConstructorInfo;
         if (constructorInfo != null)
         {
-            construction = $"new {constructorInfo.TypeName}(";
+            construction.Append("new ").Append(constructorInfo.TypeName).Append("(");
 
             int lastIndex = constructorInfo.ParameterTypes.Length - 1;
             for (int index = 0; index < constructorInfo.ParameterTypes.Length; index++)
             {
                 var param = constructorInfo.ParameterTypes[index];
-                construction += typeToPropertyNameLookup[param];
+                construction.Append(typeToPropertyNameLookup[param]);
 
                 if (index != lastIndex)
                 {
-                    construction += ", ";
+                    construction.Append(", ");
                 }
             }
-            construction += ")";
+            construction.Append(")");
         }
         else
         {
-            construction = $"base.{registration.Name}";
+            construction.Append("base.").Append(registration.Name);
         }
 
         if (registration.RegistrationScope == RegistrationScope.Singleton)
