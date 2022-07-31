@@ -1,4 +1,4 @@
-﻿namespace Yak.Generator;
+﻿namespace Yak.Generator.Infos;
 
 internal sealed class PropertyInfo
 {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Yak.Generator;
+namespace Yak.Generator.Infos;
 
 internal enum RegistrationScope
 {

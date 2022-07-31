@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using Yak.Generator.Infos;
 
 namespace Yak.Generator;
 

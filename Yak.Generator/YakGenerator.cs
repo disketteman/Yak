@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using System.Text;
+using Yak.Generator.Infos;
 
 namespace Yak.Generator;
 
@@ -9,8 +10,9 @@ namespace Yak.Generator;
 public class YakGenerator : IIncrementalGenerator
 {
     private const string YakAttributesPrefix = "Yak.";
-    private const string YakSingletonAttribute = "Yak.SingletonAttribute";
-    private const string YakScopedAttribute = "Yak.ScopedAttribute";
+    private const string YakSingletonAttributeToken = "Yak.SingletonAttribute";
+    private const string YakScopedAttributeToken = "Yak.ScopedAttribute";
+    private const string ContainerBaseToken = "ContainerBase";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -43,7 +45,7 @@ public class YakGenerator : IIncrementalGenerator
 
             foreach (var type in classDeclarationSyntax.BaseList.Types)
             {
-                if (type.ToString() == "ContainerBase")
+                if (type.ToString() == ContainerBaseToken)
                 {
                     return true;
                 }
@@ -189,9 +191,9 @@ public class YakGenerator : IIncrementalGenerator
     {
         switch (name)
         {
-            case YakSingletonAttribute:
+            case YakSingletonAttributeToken:
                 return RegistrationScope.Singleton;
-            case YakScopedAttribute:
+            case YakScopedAttributeToken:
                 return RegistrationScope.Scoped;
             default:
                 return RegistrationScope.Transient;
